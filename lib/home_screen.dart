@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:geolocator/geolocator.dart'; // Import geolocator
-import 'dart:async'; // Import for StreamSubscription
+import 'package:geolocator/geolocator.dart';
+import 'dart:async';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -12,12 +12,12 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  GoogleMapController? _googleMapController; // Made nullable
+  GoogleMapController? _googleMapController;
   bool _locationPermissionGranted = false;
-  StreamSubscription<Position>? _positionStreamSubscription; // To listen for location changes
-  List<LatLng> _polylineCoordinates = []; // Stores points for the polyline
-  LatLng? _currentLocation; // Stores the user's current location
-  Marker? _userMarker; // Stores the user's marker
+  StreamSubscription<Position>? _positionStreamSubscription;
+  List<LatLng> _polylineCoordinates = [];
+  LatLng? _currentLocation;
+  Marker? _userMarker;
 
   @override
   void initState() {
@@ -27,8 +27,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
-    _positionStreamSubscription?.cancel(); // Cancel the location stream
-    _googleMapController?.dispose(); // Dispose the map controller
+    _positionStreamSubscription?.cancel();
+    _googleMapController?.dispose();
     super.dispose();
   }
 
@@ -38,7 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {
         _locationPermissionGranted = true;
       });
-      _startLocationUpdates(); // Start listening for location updates
+      _startLocationUpdates();
     } else if (status.isDenied) {
       _showPermissionDeniedDialog(context);
     } else if (status.isPermanentlyDenied) {
@@ -51,7 +51,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     const LocationSettings locationSettings = LocationSettings(
       accuracy: LocationAccuracy.high,
-      distanceFilter: 10, // Update every 10 meters
+      distanceFilter: 10,
     );
 
     _positionStreamSubscription = Geolocator.getPositionStream(locationSettings: locationSettings)
@@ -59,9 +59,8 @@ class _HomeScreenState extends State<HomeScreen> {
           final newLatLng = LatLng(position.latitude, position.longitude);
           setState(() {
             _currentLocation = newLatLng;
-            _polylineCoordinates.add(newLatLng); // Add new point to polyline
+            _polylineCoordinates.add(newLatLng);
 
-            // Update marker
             _userMarker = Marker(
               markerId: const MarkerId("user_location"),
               position: newLatLng,
@@ -70,24 +69,19 @@ class _HomeScreenState extends State<HomeScreen> {
                 snippet:
                     "Lat: ${newLatLng.latitude.toStringAsFixed(4)}, Lng: ${newLatLng.longitude.toStringAsFixed(4)}",
               ),
-              icon: BitmapDescriptor.defaultMarkerWithHue(
-                BitmapDescriptor.hueAzure,
-              ), // A different color for user
+              icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
             );
 
-            // Move camera to current location
             _googleMapController?.animateCamera(CameraUpdate.newLatLng(newLatLng));
           });
         });
   }
 
   void _showPermissionDeniedDialog(BuildContext context) {
-    // TODO: Implement a user-friendly dialog or snackbar
     print("Location permission denied.");
   }
 
   void _showPermissionPermanentlyDeniedDialog(BuildContext context) {
-    // TODO: Implement a user-friendly dialog and offer to open app settings
     print("Location permission permanently denied. Please enable it in settings.");
     openAppSettings();
   }
@@ -98,9 +92,7 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(title: Text("Home Screen")),
       body: _locationPermissionGranted
           ? (_currentLocation == null && _polylineCoordinates.isEmpty)
-                ? const Center(
-                    child: CircularProgressIndicator(),
-                  ) // Show loading until first location
+                ? const Center(child: CircularProgressIndicator())
                 : GoogleMap(
                     mapType: MapType.normal,
                     trafficEnabled: true,
@@ -108,29 +100,25 @@ class _HomeScreenState extends State<HomeScreen> {
                     myLocationEnabled: true,
                     initialCameraPosition: CameraPosition(
                       target:
-                          _currentLocation ??
-                          const LatLng(
-                            22.502981851772283,
-                            91.81071211436299,
-                          ), // Use current location if available, else default
+                          _currentLocation ?? const LatLng(22.502981851772283, 91.81071211436299),
                       zoom: 19,
                     ),
                     onMapCreated: (GoogleMapController controller) {
                       _googleMapController = controller;
-                      // If location is already available, animate camera to it
+
                       if (_currentLocation != null) {
                         _googleMapController?.animateCamera(
                           CameraUpdate.newLatLng(_currentLocation!),
                         );
                       }
                     },
-                    markers: _userMarker != null ? {_userMarker!} : {}, // Display user marker
+                    markers: _userMarker != null ? {_userMarker!} : {},
                     polylines: {
                       Polyline(
                         polylineId: const PolylineId("user_path"),
                         points: _polylineCoordinates,
-                        color: Colors.blue, // Color of the polyline
-                        width: 5, // Width of the polyline
+                        color: Colors.blue,
+                        width: 5,
                       ),
                     },
                   )
